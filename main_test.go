@@ -37,7 +37,7 @@ func TestBeerSearchAll(t *testing.T) {
 	}
 	defer index.Close()
 
-	for jf := range walkDirectory("../../samples/beer-sample/", t) {
+	for jf := range walkDirectory("data/", t) {
 		docId := jf.filename[0:strings.LastIndex(jf.filename, ".")]
 		err = index.Index(docId, jf.contents)
 		if err != nil {
@@ -209,7 +209,7 @@ func TestBeerSearchBug87(t *testing.T) {
 	wg.Add(1)
 	// start indexing documents in the background
 	go func() {
-		for jf := range walkDirectory("../../samples/beer-sample/", t) {
+		for jf := range walkDirectory("data/", t) {
 			docId := jf.filename[0:strings.LastIndex(jf.filename, ".")]
 			err = index.Index(docId, jf.contents)
 			if err != nil {
