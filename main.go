@@ -34,7 +34,7 @@ func main() {
 
 	// open the index
 	beerIndex, err := bleve.Open(*indexPath)
-	if err == bleve.ERROR_INDEX_PATH_DOES_NOT_EXIST {
+	if err == bleve.ErrorIndexPathDoesNotExist {
 		log.Printf("Creating new index...")
 		// create a mapping
 		indexMapping, err := buildIndexMapping()
