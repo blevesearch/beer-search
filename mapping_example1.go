@@ -19,53 +19,49 @@ const textFieldAnalyzer = "en"
 
 func buildIndexMapping() (*bleve.IndexMapping, error) {
 
-	nameMapping := bleve.NewDocumentMapping().
-		AddFieldMapping(
-		bleve.NewFieldMapping(
-			"", "text", textFieldAnalyzer,
-			true, true, true, true))
+	// a custom field definition that uses our custom analyzer
+	notTooLongFieldMapping := bleve.NewFieldMapping(
+		"", "text", "enNotTooLong",
+		true, true, true, true)
 
-	descMapping := bleve.NewDocumentMapping().
-		AddFieldMapping(
-		bleve.NewFieldMapping(
-			"", "text", "enNotTooLong",
-			true, true, true, true)).
-		AddFieldMapping(
-		bleve.NewFieldMapping("descriptionLang", "text", "detect_lang",
-			false, true, false, false))
+	// a generic reusable mapping for english text
+	englishTextFieldMapping := bleve.NewTextFieldMapping()
+	englishTextFieldMapping.Analyzer = "en"
 
-	typeMapping := bleve.NewDocumentMapping().
-		AddFieldMapping(
-		bleve.NewFieldMapping(
-			"", "text", "keyword",
-			true, true, true, true))
+	// a generic reusable mapping for keyword text
+	keywordFieldMapping := bleve.NewTextFieldMapping()
+	keywordFieldMapping.Analyzer = "keyword"
 
-	styleMapping := bleve.NewDocumentMapping().
-		AddFieldMapping(
-		bleve.NewFieldMapping(
-			"", "text", "keyword",
-			true, true, true, true))
+	// a specific mapping to index the description fields
+	// detected language
+	descriptionLangFieldMapping := bleve.NewTextFieldMapping()
+	descriptionLangFieldMapping.Name = "descriptionLang"
+	descriptionLangFieldMapping.Analyzer = "detect_lang"
+	descriptionLangFieldMapping.Store = false
+	descriptionLangFieldMapping.IncludeTermVectors = false
+	descriptionLangFieldMapping.IncludeInAll = false
 
-	categoryMapping := bleve.NewDocumentMapping().
-		AddFieldMapping(
-		bleve.NewFieldMapping(
-			"", "text", "keyword",
-			true, true, true, true))
+	beerMapping := bleve.NewDocumentMapping()
 
-	beerMapping := bleve.NewDocumentMapping().
-		AddSubDocumentMapping("name", nameMapping).
-		AddSubDocumentMapping("description", descMapping).
-		AddSubDocumentMapping("type", typeMapping).
-		AddSubDocumentMapping("style", styleMapping).
-		AddSubDocumentMapping("category", categoryMapping)
+	// name
+	beerMapping.AddFieldMappingsAt("name", englishTextFieldMapping)
 
-	breweryMapping := bleve.NewDocumentMapping().
-		AddSubDocumentMapping("name", nameMapping).
-		AddSubDocumentMapping("description", descMapping)
+	// description
+	beerMapping.AddFieldMappingsAt("description",
+		notTooLongFieldMapping,
+		descriptionLangFieldMapping)
 
-	indexMapping := bleve.NewIndexMapping().
-		AddDocumentMapping("beer", beerMapping).
-		AddDocumentMapping("brewery", breweryMapping)
+	beerMapping.AddFieldMappingsAt("type", keywordFieldMapping)
+	beerMapping.AddFieldMappingsAt("style", keywordFieldMapping)
+	beerMapping.AddFieldMappingsAt("category", keywordFieldMapping)
+
+	breweryMapping := bleve.NewDocumentMapping()
+	breweryMapping.AddFieldMappingsAt("name", englishTextFieldMapping)
+	breweryMapping.AddFieldMappingsAt("description", englishTextFieldMapping)
+
+	indexMapping := bleve.NewIndexMapping()
+	indexMapping.AddDocumentMapping("beer", beerMapping)
+	indexMapping.AddDocumentMapping("brewery", breweryMapping)
 
 	indexMapping.TypeField = "type"
 	indexMapping.DefaultAnalyzer = textFieldAnalyzer
