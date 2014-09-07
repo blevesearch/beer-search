@@ -7,7 +7,7 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
-// +build example1
+// +build example2
 
 package main
 
@@ -20,8 +20,8 @@ const textFieldAnalyzer = "en"
 func buildIndexMapping() (*bleve.IndexMapping, error) {
 
 	// a custom field definition that uses our custom analyzer
-	notTooLongFieldMapping := bleve.NewTextFieldMapping()
-	notTooLongFieldMapping.Analyzer = "enNotTooLong"
+	edgeNgram325FieldMapping := bleve.NewTextFieldMapping()
+	edgeNgram325FieldMapping.Analyzer = "enWithEdgeNgram325"
 
 	// a generic reusable mapping for english text
 	englishTextFieldMapping := bleve.NewTextFieldMapping()
@@ -47,7 +47,7 @@ func buildIndexMapping() (*bleve.IndexMapping, error) {
 
 	// description
 	beerMapping.AddFieldMappingsAt("description",
-		notTooLongFieldMapping,
+		edgeNgram325FieldMapping,
 		descriptionLangFieldMapping)
 
 	beerMapping.AddFieldMappingsAt("type", keywordFieldMapping)
@@ -65,25 +65,25 @@ func buildIndexMapping() (*bleve.IndexMapping, error) {
 	indexMapping.TypeField = "type"
 	indexMapping.DefaultAnalyzer = textFieldAnalyzer
 
-	err := indexMapping.AddCustomTokenFilter("notTooLong",
+	err := indexMapping.AddCustomTokenFilter("edgeNgram325",
 		map[string]interface{}{
-			"type":   "truncate_token",
-			"length": 5.0,
+			"type": "edge_ngram",
+			"min":  3.0,
+			"max":  25.0,
 		})
 	if err != nil {
 		return nil, err
 	}
 
-	err = indexMapping.AddCustomAnalyzer("enNotTooLong",
+	err = indexMapping.AddCustomAnalyzer("enWithEdgeNgram325",
 		map[string]interface{}{
 			"type":      "custom",
 			"tokenizer": "unicode",
 			"token_filters": []string{
-				"notTooLong",
 				"possessive_en",
 				"to_lower",
 				"stop_en",
-				"stemmer_en",
+				"edgeNgram325",
 			},
 		})
 	if err != nil {

@@ -8,6 +8,7 @@
 //  and limitations under the License.
 
 // +build !example1
+// +build !example2
 
 package main
 
