@@ -11,14 +11,18 @@ package main
 import (
 	_ "expvar"
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"path/filepath"
 	"time"
 
 	"github.com/blevesearch/bleve"
 	bleveHttp "github.com/blevesearch/bleve/http"
+	"github.com/couchbase/gomemcached/client"
+	"github.com/couchbaselabs/go-couchbase"
 )
 
 var batchSize = flag.Int("batchSize", 100, "batch size for indexing")
@@ -27,6 +31,10 @@ var jsonDir = flag.String("jsonDir", "data/", "json directory")
 var indexPath = flag.String("index", "beer-search.bleve", "index path")
 var staticEtag = flag.String("staticEtag", "", "A static etag value.")
 var staticPath = flag.String("static", "static/", "Path to the static content")
+var couchbaseUrl = flag.String("couchbase", "", "Path to couchbase server")
+
+// to index bucket beer-sample from a couchbase server
+// ./beer-search -couchbase="http://beer-sample@host:port/"
 
 func main() {
 
@@ -48,7 +56,11 @@ func main() {
 
 		// index data in the background
 		go func() {
-			err = indexBeer(beerIndex)
+			if len(*couchbaseUrl) > 0 {
+				err = indexBeerCb(beerIndex, *couchbaseUrl)
+			} else {
+				err = indexBeer(beerIndex)
+			}
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -121,6 +133,98 @@ func indexBeer(i bleve.Index) error {
 			log.Printf("Indexed %d documents, in %.2fs (average %.2fms/doc)", count, indexDurationSeconds, timePerDoc/float64(time.Millisecond))
 		}
 	}
+	indexDuration := time.Since(startTime)
+	indexDurationSeconds := float64(indexDuration) / float64(time.Second)
+	timePerDoc := float64(indexDuration) / float64(count)
+	log.Printf("Indexed %d documents, in %.2fs (average %.2fms/doc)", count, indexDurationSeconds, timePerDoc/float64(time.Millisecond))
+	return nil
+}
+
+func indexBeerCb(i bleve.Index, couchbaseUrl string) error {
+
+	// connect to the couchbase url/bucket
+	u, err := url.Parse(couchbaseUrl)
+	if err != nil {
+		return err
+	}
+
+	if u.User == nil {
+		return fmt.Errorf("Bucket name not specified")
+	}
+
+	bucket := u.User.Username()
+	c, err := couchbase.Connect(u.String())
+	if err != nil {
+		return err
+	}
+
+	p, err := c.GetPool("default")
+	if err != nil {
+		return err
+	}
+
+	b, err := p.GetBucket(bucket)
+	if err != nil {
+		return err
+	}
+
+	feed, err := b.StartUprFeed("bleve", 0)
+	if err != nil {
+		return err
+	}
+	defer feed.Close()
+
+	// ger the vbucket map for this bucket
+	vbm := b.VBServerMap()
+
+	// request stream for all vbuckets
+	for i := 0; i < len(vbm.VBucketMap); i++ {
+		if err := feed.UprRequestStream(uint16(i), 0, 0, 0, 0xFFFFFFFFFFFFFFFF, 0, 0); err != nil {
+			fmt.Printf("%s", err.Error())
+		}
+	}
+
+	log.Printf("Indexing...")
+	count := 0
+	startTime := time.Now()
+	batch := bleve.NewBatch()
+	batchCount := 0
+
+	// observe and index mutations from the channel.
+	var e *memcached.UprEvent
+loop:
+	for {
+		select {
+		case e = <-feed.C:
+		case <-time.After(time.Second):
+			break loop
+		}
+
+		if e.Opcode == memcached.UprMutation {
+			//log.Printf(" got mutation %s", e.Value)
+			batch.Index(string(e.Key), e.Value)
+			batchCount++
+
+			if batchCount >= *batchSize {
+				err = i.Batch(batch)
+				if err != nil {
+					return err
+				}
+				batch = bleve.NewBatch()
+				batchCount = 0
+			}
+			count++
+			if count%1000 == 0 {
+				indexDuration := time.Since(startTime)
+				indexDurationSeconds := float64(indexDuration) / float64(time.Second)
+				timePerDoc := float64(indexDuration) / float64(count)
+				log.Printf("Indexed %d documents, in %.2fs (average %.2fms/doc)", count, indexDurationSeconds, timePerDoc/float64(time.Millisecond))
+			}
+
+		}
+
+	}
+
 	indexDuration := time.Since(startTime)
 	indexDurationSeconds := float64(indexDuration) / float64(time.Second)
 	timePerDoc := float64(indexDuration) / float64(count)
