@@ -16,8 +16,7 @@ package main
 import (
 	"io/ioutil"
 	"os"
-	"strings"
-	"sync"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -37,11 +36,42 @@ func TestBeerSearchAll(t *testing.T) {
 	}
 	defer index.Close()
 
-	for jf := range walkDirectory("data/", t) {
-		docId := jf.filename[0:strings.LastIndex(jf.filename, ".")]
-		err = index.Index(docId, jf.contents)
+	// open the directory
+	dirEntries, err := ioutil.ReadDir("data/")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	indexBatchSize := 100
+	batch := bleve.NewBatch()
+	batchCount := 0
+	for _, dirEntry := range dirEntries {
+		filename := dirEntry.Name()
+		// read the bytes
+		jsonBytes, err := ioutil.ReadFile("data/" + filename)
 		if err != nil {
-			t.Error(err)
+			t.Fatal(err)
+		}
+		// // shred them into a document
+		ext := filepath.Ext(filename)
+		docId := filename[:(len(filename) - len(ext))]
+		batch.Index(docId, jsonBytes)
+		batchCount++
+
+		if batchCount >= indexBatchSize {
+			err = index.Batch(batch)
+			if err != nil {
+				t.Fatal(err)
+			}
+			batch = bleve.NewBatch()
+			batchCount = 0
+		}
+	}
+	// flush the last batch
+	if batchCount > 0 {
+		err = index.Batch(batch)
+		if err != nil {
+			t.Fatal(err)
 		}
 	}
 
@@ -161,34 +191,6 @@ type jsonFile struct {
 	contents []byte
 }
 
-func walkDirectory(dir string, t *testing.T) chan jsonFile {
-	rv := make(chan jsonFile)
-	go func() {
-		defer close(rv)
-
-		// open the directory
-		dirEntries, err := ioutil.ReadDir(dir)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		// walk the directory entries
-		for _, dirEntry := range dirEntries {
-			// read the bytes
-			jsonBytes, err := ioutil.ReadFile(dir + "/" + dirEntry.Name())
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			rv <- jsonFile{
-				filename: dirEntry.Name(),
-				contents: jsonBytes,
-			}
-		}
-	}()
-	return rv
-}
-
 // this test reproduces bug #87
 // https://github.com/blevesearch/bleve/issues/87
 // because of which, it will deadlock
@@ -205,22 +207,32 @@ func TestBeerSearchBug87(t *testing.T) {
 	}
 	defer index.Close()
 
-	var wg sync.WaitGroup
-	wg.Add(1)
 	// start indexing documents in the background
 	go func() {
-		for jf := range walkDirectory("data/", t) {
-			docId := jf.filename[0:strings.LastIndex(jf.filename, ".")]
-			err = index.Index(docId, jf.contents)
-			if err != nil {
-				t.Error(err)
-			}
+		// open the directory
+		dirEntries, err := ioutil.ReadDir("data/")
+		if err != nil {
+			t.Fatal(err)
 		}
-		wg.Done()
+
+		for _, dirEntry := range dirEntries {
+			filename := dirEntry.Name()
+			jsonBytes, err := ioutil.ReadFile("data/" + filename)
+			if err != nil {
+				t.Fatal(err)
+			}
+			ext := filepath.Ext(filename)
+			docId := filename[:(len(filename) - len(ext))]
+			index.Index(docId, jsonBytes)
+		}
 	}()
 
-	for i := 0; i < 50; i++ {
-		time.Sleep(1 * time.Second)
+	// give indexing a head start
+	time.Sleep(1 * time.Second)
+
+	// start querying
+	for i := 0; i < 1000; i++ {
+		time.Sleep(1 * time.Millisecond)
 		termQuery := bleve.NewTermQuery("shock").SetField("name")
 		termSearchRequest := bleve.NewSearchRequest(termQuery)
 		// termSearchRequest.AddFacet("styles", bleve.NewFacetRequest("style", 3))
@@ -230,6 +242,4 @@ func TestBeerSearchBug87(t *testing.T) {
 			t.Error(err)
 		}
 	}
-
-	wg.Wait()
 }

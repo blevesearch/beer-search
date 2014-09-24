@@ -14,7 +14,10 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"path/filepath"
+	"runtime"
+	"runtime/pprof"
 	"time"
 
 	"github.com/blevesearch/bleve"
@@ -27,10 +30,22 @@ var jsonDir = flag.String("jsonDir", "data/", "json directory")
 var indexPath = flag.String("index", "beer-search.bleve", "index path")
 var staticEtag = flag.String("staticEtag", "", "A static etag value.")
 var staticPath = flag.String("static", "static/", "Path to the static content")
+var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
+var memprofile = flag.String("memprofile", "", "write mem profile to file")
 
 func main() {
 
 	flag.Parse()
+
+	log.Printf("GOMAXPROCS: %d", runtime.GOMAXPROCS(-1))
+
+	if *cpuprofile != "" {
+		f, err := os.Create(*cpuprofile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		pprof.StartCPUProfile(f)
+	}
 
 	// open the index
 	beerIndex, err := bleve.Open(*indexPath)
@@ -51,6 +66,15 @@ func main() {
 			err = indexBeer(beerIndex)
 			if err != nil {
 				log.Fatal(err)
+			}
+			pprof.StopCPUProfile()
+			if *memprofile != "" {
+				f, err := os.Create(*memprofile)
+				if err != nil {
+					log.Fatal(err)
+				}
+				pprof.WriteHeapProfile(f)
+				f.Close()
 			}
 		}()
 	} else if err != nil {
@@ -119,6 +143,13 @@ func indexBeer(i bleve.Index) error {
 			indexDurationSeconds := float64(indexDuration) / float64(time.Second)
 			timePerDoc := float64(indexDuration) / float64(count)
 			log.Printf("Indexed %d documents, in %.2fs (average %.2fms/doc)", count, indexDurationSeconds, timePerDoc/float64(time.Millisecond))
+		}
+	}
+	// flush the last batch
+	if batchCount > 0 {
+		err = i.Batch(batch)
+		if err != nil {
+			log.Fatal(err)
 		}
 	}
 	indexDuration := time.Since(startTime)
