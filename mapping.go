@@ -26,15 +26,6 @@ func buildIndexMapping() (*bleve.IndexMapping, error) {
 	keywordFieldMapping := bleve.NewTextFieldMapping()
 	keywordFieldMapping.Analyzer = "keyword"
 
-	// a specific mapping to index the description fields
-	// detected language
-	descriptionLangFieldMapping := bleve.NewTextFieldMapping()
-	descriptionLangFieldMapping.Name = "descriptionLang"
-	descriptionLangFieldMapping.Analyzer = "detect_lang"
-	descriptionLangFieldMapping.Store = false
-	descriptionLangFieldMapping.IncludeTermVectors = false
-	descriptionLangFieldMapping.IncludeInAll = false
-
 	beerMapping := bleve.NewDocumentMapping()
 
 	// name
@@ -42,8 +33,7 @@ func buildIndexMapping() (*bleve.IndexMapping, error) {
 
 	// description
 	beerMapping.AddFieldMappingsAt("description",
-		englishTextFieldMapping,
-		descriptionLangFieldMapping)
+		englishTextFieldMapping)
 
 	beerMapping.AddFieldMappingsAt("type", keywordFieldMapping)
 	beerMapping.AddFieldMappingsAt("style", keywordFieldMapping)
