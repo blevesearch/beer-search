@@ -5,6 +5,8 @@ function SearchCtrl($scope, $http, $routeParams, $log, $sce) {
     $scope.inclusiveStart = true;
     $scope.inclusiveEnd = false;
     $scope.fieldNames = [];
+    $scope.prefix_length = "0";
+    $scope.fuzziness = "0";
 
     $scope.minShouldOptions = [];
     for (var i = 0; i <= 50; i++) {
@@ -126,6 +128,8 @@ function SearchCtrl($scope, $http, $routeParams, $log, $sce) {
                 "boost": 1.0,
                 "match": $scope.match,
                 "field": $scope.field,
+                "prefix_length": parseInt($scope.prefix_length,10),
+                "fuzziness": parseInt($scope.fuzziness,10)
             }
         }).
         success(function(data) {

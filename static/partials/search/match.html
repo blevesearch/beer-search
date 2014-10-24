@@ -16,6 +16,18 @@
                 </div>
         </div>
         <div class="form-group">
+                <label for="searchFuzziness" class="col-sm-2 control-label">Fuzziness</label>
+                <div class="col-sm-10">
+                        <input ng-model="fuzziness" type="text" class="form-control" id="searchFuzziness">
+                </div>
+        </div>
+        <div class="form-group">
+                <label for="searchPrefix" class="col-sm-2 control-label">Prefix Length</label>
+                <div class="col-sm-10">
+                        <input ng-model="prefix_length" type="text" class="form-control" id="searchPrefix">
+                </div>
+        </div>
+        <div class="form-group">
                 <div class="col-sm-offset-2 col-sm-10">
                         <button type="submit" class="btn btn-primary" ng-click="searchMatch()">Search</button>
                 </div>
