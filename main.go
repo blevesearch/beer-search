@@ -92,7 +92,9 @@ func main() {
 	router.Handle("/api/search", searchHandler).Methods("POST")
 	listFieldsHandler := bleveHttp.NewListFieldsHandler("beer")
 	router.Handle("/api/fields", listFieldsHandler).Methods("GET")
+
 	debugHandler := bleveHttp.NewDebugDocumentHandler("beer")
+	debugHandler.DocIDLookup = docIDLookup
 	router.Handle("/api/debug/{docID}", debugHandler).Methods("GET")
 
 	// start the HTTP server
