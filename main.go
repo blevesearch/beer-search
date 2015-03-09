@@ -116,7 +116,7 @@ func indexBeer(i bleve.Index) error {
 	log.Printf("Indexing...")
 	count := 0
 	startTime := time.Now()
-	batch := bleve.NewBatch()
+	batch := i.NewBatch()
 	batchCount := 0
 	for _, dirEntry := range dirEntries {
 		filename := dirEntry.Name()
@@ -136,7 +136,7 @@ func indexBeer(i bleve.Index) error {
 			if err != nil {
 				return err
 			}
-			batch = bleve.NewBatch()
+			batch = i.NewBatch()
 			batchCount = 0
 		}
 		count++
