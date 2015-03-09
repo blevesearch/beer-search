@@ -39,7 +39,7 @@ func TestBeerSearchAll(t *testing.T) {
 	}
 
 	indexBatchSize := 100
-	batch := bleve.NewBatch()
+	batch := index.NewBatch()
 	batchCount := 0
 	for _, dirEntry := range dirEntries {
 		filename := dirEntry.Name()
@@ -59,7 +59,7 @@ func TestBeerSearchAll(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			batch = bleve.NewBatch()
+			batch = index.NewBatch()
 			batchCount = 0
 		}
 	}
