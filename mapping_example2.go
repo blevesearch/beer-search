@@ -13,6 +13,13 @@ package main
 
 import (
 	"github.com/blevesearch/bleve"
+	"github.com/blevesearch/bleve/analysis/analyzers/custom_analyzer"
+	"github.com/blevesearch/bleve/analysis/analyzers/keyword_analyzer"
+	"github.com/blevesearch/bleve/analysis/language/en"
+	"github.com/blevesearch/bleve/analysis/token_filters/edge_ngram_filter"
+	"github.com/blevesearch/bleve/analysis/token_filters/lower_case_filter"
+	"github.com/blevesearch/bleve/analysis/tokenizers/unicode"
+	"github.com/blevesearch/blevex/detect_lang"
 )
 
 const textFieldAnalyzer = "en"
@@ -25,17 +32,17 @@ func buildIndexMapping() (*bleve.IndexMapping, error) {
 
 	// a generic reusable mapping for english text
 	englishTextFieldMapping := bleve.NewTextFieldMapping()
-	englishTextFieldMapping.Analyzer = "en"
+	englishTextFieldMapping.Analyzer = en.AnalyzerName
 
 	// a generic reusable mapping for keyword text
 	keywordFieldMapping := bleve.NewTextFieldMapping()
-	keywordFieldMapping.Analyzer = "keyword"
+	keywordFieldMapping.Analyzer = keyword_analyzer.Name
 
 	// a specific mapping to index the description fields
 	// detected language
 	descriptionLangFieldMapping := bleve.NewTextFieldMapping()
 	descriptionLangFieldMapping.Name = "descriptionLang"
-	descriptionLangFieldMapping.Analyzer = "detect_lang"
+	descriptionLangFieldMapping.Analyzer = detect_lang.AnalyzerName
 	descriptionLangFieldMapping.Store = false
 	descriptionLangFieldMapping.IncludeTermVectors = false
 	descriptionLangFieldMapping.IncludeInAll = false
@@ -67,7 +74,7 @@ func buildIndexMapping() (*bleve.IndexMapping, error) {
 
 	err := indexMapping.AddCustomTokenFilter("edgeNgram325",
 		map[string]interface{}{
-			"type": "edge_ngram",
+			"type": edge_ngram_filter.Name,
 			"min":  3.0,
 			"max":  25.0,
 		})
@@ -77,12 +84,12 @@ func buildIndexMapping() (*bleve.IndexMapping, error) {
 
 	err = indexMapping.AddCustomAnalyzer("enWithEdgeNgram325",
 		map[string]interface{}{
-			"type":      "custom",
-			"tokenizer": "unicode",
+			"type":      custom_analyzer.Name,
+			"tokenizer": unicode.Name,
 			"token_filters": []string{
-				"possessive_en",
-				"to_lower",
-				"stop_en",
+				en.PossessiveName,
+				lower_case_filter.Name,
+				en.StopName,
 				"edgeNgram325",
 			},
 		})

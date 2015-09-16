@@ -13,6 +13,14 @@ package main
 
 import (
 	"github.com/blevesearch/bleve"
+	"github.com/blevesearch/bleve/analysis/analyzers/custom_analyzer"
+	"github.com/blevesearch/bleve/analysis/analyzers/keyword_analyzer"
+	"github.com/blevesearch/bleve/analysis/language/en"
+	"github.com/blevesearch/bleve/analysis/token_filters/lower_case_filter"
+	"github.com/blevesearch/bleve/analysis/token_filters/porter"
+	"github.com/blevesearch/bleve/analysis/token_filters/truncate_token_filter"
+	"github.com/blevesearch/bleve/analysis/tokenizers/unicode"
+	"github.com/blevesearch/blevex/detect_lang"
 )
 
 const textFieldAnalyzer = "en"
@@ -25,17 +33,17 @@ func buildIndexMapping() (*bleve.IndexMapping, error) {
 
 	// a generic reusable mapping for english text
 	englishTextFieldMapping := bleve.NewTextFieldMapping()
-	englishTextFieldMapping.Analyzer = "en"
+	englishTextFieldMapping.Analyzer = en.AnalyzerName
 
 	// a generic reusable mapping for keyword text
 	keywordFieldMapping := bleve.NewTextFieldMapping()
-	keywordFieldMapping.Analyzer = "keyword"
+	keywordFieldMapping.Analyzer = keyword_analyzer.Name
 
 	// a specific mapping to index the description fields
 	// detected language
 	descriptionLangFieldMapping := bleve.NewTextFieldMapping()
 	descriptionLangFieldMapping.Name = "descriptionLang"
-	descriptionLangFieldMapping.Analyzer = "detect_lang"
+	descriptionLangFieldMapping.Analyzer = detect_lang.AnalyzerName
 	descriptionLangFieldMapping.Store = false
 	descriptionLangFieldMapping.IncludeTermVectors = false
 	descriptionLangFieldMapping.IncludeInAll = false
@@ -67,7 +75,7 @@ func buildIndexMapping() (*bleve.IndexMapping, error) {
 
 	err := indexMapping.AddCustomTokenFilter("notTooLong",
 		map[string]interface{}{
-			"type":   "truncate_token",
+			"type":   truncate_token_filter.Name,
 			"length": 5.0,
 		})
 	if err != nil {
@@ -76,14 +84,14 @@ func buildIndexMapping() (*bleve.IndexMapping, error) {
 
 	err = indexMapping.AddCustomAnalyzer("enNotTooLong",
 		map[string]interface{}{
-			"type":      "custom",
-			"tokenizer": "unicode",
+			"type":      custom_analyzer.Name,
+			"tokenizer": unicode.Name,
 			"token_filters": []string{
 				"notTooLong",
-				"possessive_en",
-				"to_lower",
-				"stop_en",
-				"stemmer_en",
+				en.PossessiveName,
+				lower_case_filter.Name,
+				en.StopName,
+				porter.Name,
 			},
 		})
 	if err != nil {
