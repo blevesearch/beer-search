@@ -10,6 +10,7 @@
 package main
 
 import (
+	"encoding/json"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -48,10 +49,15 @@ func TestBeerSearchAll(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		// // shred them into a document
+		// parse bytes as json
+		var jsonDoc interface{}
+		err = json.Unmarshal(jsonBytes, &jsonDoc)
+		if err != nil {
+			t.Fatal(err)
+		}
 		ext := filepath.Ext(filename)
 		docId := filename[:(len(filename) - len(ext))]
-		batch.Index(docId, jsonBytes)
+		batch.Index(docId, jsonDoc)
 		batchCount++
 
 		if batchCount >= indexBatchSize {

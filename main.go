@@ -9,6 +9,7 @@
 package main
 
 import (
+	"encoding/json"
 	_ "expvar"
 	"flag"
 	"io/ioutil"
@@ -125,10 +126,15 @@ func indexBeer(i bleve.Index) error {
 		if err != nil {
 			return err
 		}
-		// // shred them into a document
+		// parse bytes as json
+		var jsonDoc interface{}
+		err = json.Unmarshal(jsonBytes, &jsonDoc)
+		if err != nil {
+			return err
+		}
 		ext := filepath.Ext(filename)
-		docId := filename[:(len(filename) - len(ext))]
-		batch.Index(docId, jsonBytes)
+		docID := filename[:(len(filename) - len(ext))]
+		batch.Index(docID, jsonDoc)
 		batchCount++
 
 		if batchCount >= *batchSize {
