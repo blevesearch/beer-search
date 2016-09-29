@@ -87,7 +87,8 @@ func TestBeerSearchAll(t *testing.T) {
 	}
 
 	// run a term search
-	termQuery := bleve.NewTermQuery("shock").SetField("name")
+	termQuery := bleve.NewTermQuery("shock")
+	termQuery.SetField("name")
 	termSearchRequest := bleve.NewSearchRequest(termQuery)
 	termSearchResult, err := index.Search(termSearchRequest)
 	if err != nil {
@@ -139,7 +140,8 @@ func TestBeerSearchAll(t *testing.T) {
 
 	// run a numeric range search
 	queryMin := 50.0
-	numericRangeQuery := bleve.NewNumericRangeQuery(&queryMin, nil).SetField("abv")
+	numericRangeQuery := bleve.NewNumericRangeQuery(&queryMin, nil)
+	numericRangeQuery.SetField("abv")
 	numericSearchRequest := bleve.NewSearchRequest(numericRangeQuery)
 	numericSearchResult, err := index.Search(numericSearchRequest)
 	if err != nil {
@@ -156,8 +158,13 @@ func TestBeerSearchAll(t *testing.T) {
 	}
 
 	// run a date range search
-	queryStartDate := "2011-10-04"
-	dateRangeQuery := bleve.NewDateRangeQuery(&queryStartDate, nil).SetField("updated")
+	queryStartDateString := "2011-10-04"
+	queryStartDate, err := time.Parse("2006-01-02", queryStartDateString)
+	if err != nil {
+		t.Fatal(err)
+	}
+	dateRangeQuery := bleve.NewDateRangeQuery(queryStartDate, time.Time{})
+	dateRangeQuery.SetField("updated")
 	dateSearchRequest := bleve.NewSearchRequest(dateRangeQuery)
 	dateSearchResult, err := index.Search(dateSearchRequest)
 	if err != nil {
@@ -174,7 +181,8 @@ func TestBeerSearchAll(t *testing.T) {
 	}
 
 	// run a prefix search
-	prefixQuery := bleve.NewPrefixQuery("adir").SetField("name")
+	prefixQuery := bleve.NewPrefixQuery("adir")
+	prefixQuery.SetField("name")
 	prefixSearchRequest := bleve.NewSearchRequest(prefixQuery)
 	prefixSearchResult, err := index.Search(prefixSearchRequest)
 	if err != nil {
@@ -238,7 +246,8 @@ func TestBeerSearchBug87(t *testing.T) {
 	// start querying
 	for i := 0; i < 1000; i++ {
 		time.Sleep(1 * time.Millisecond)
-		termQuery := bleve.NewTermQuery("shock").SetField("name")
+		termQuery := bleve.NewTermQuery("shock")
+		termQuery.SetField("name")
 		termSearchRequest := bleve.NewSearchRequest(termQuery)
 		// termSearchRequest.AddFacet("styles", bleve.NewFacetRequest("style", 3))
 		termSearchRequest.Fields = []string{"abv"}
