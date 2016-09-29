@@ -19,12 +19,13 @@ import (
 	"github.com/blevesearch/bleve/analysis/token_filters/edge_ngram_filter"
 	"github.com/blevesearch/bleve/analysis/token_filters/lower_case_filter"
 	"github.com/blevesearch/bleve/analysis/tokenizers/unicode"
+	"github.com/blevesearch/bleve/mapping"
 	"github.com/blevesearch/blevex/detect_lang"
 )
 
 const textFieldAnalyzer = "en"
 
-func buildIndexMapping() (*bleve.IndexMapping, error) {
+func buildIndexMapping() (mapping.IndexMapping, error) {
 
 	// a custom field definition that uses our custom analyzer
 	edgeNgram325FieldMapping := bleve.NewTextFieldMapping()
