@@ -13,15 +13,15 @@ package main
 
 import (
 	"github.com/blevesearch/bleve"
-	"github.com/blevesearch/bleve/analysis/analyzers/custom_analyzer"
-	"github.com/blevesearch/bleve/analysis/analyzers/keyword_analyzer"
-	"github.com/blevesearch/bleve/analysis/language/en"
-	"github.com/blevesearch/bleve/analysis/token_filters/lower_case_filter"
-	"github.com/blevesearch/bleve/analysis/token_filters/porter"
-	"github.com/blevesearch/bleve/analysis/token_filters/truncate_token_filter"
+	"github.com/blevesearch/bleve/analysis/analyzers/custom"
+	"github.com/blevesearch/bleve/analysis/analyzers/keyword"
+	"github.com/blevesearch/bleve/analysis/lang/en"
 	"github.com/blevesearch/bleve/analysis/tokenizers/unicode"
+	"github.com/blevesearch/bleve/analysis/tokens/lowercase"
+	"github.com/blevesearch/bleve/analysis/tokens/porter"
+	"github.com/blevesearch/bleve/analysis/tokens/truncate"
 	"github.com/blevesearch/bleve/mapping"
-	"github.com/blevesearch/blevex/detect_lang"
+	"github.com/blevesearch/blevex/detectlang"
 )
 
 const textFieldAnalyzer = "en"
@@ -38,13 +38,13 @@ func buildIndexMapping() (mapping.IndexMapping, error) {
 
 	// a generic reusable mapping for keyword text
 	keywordFieldMapping := bleve.NewTextFieldMapping()
-	keywordFieldMapping.Analyzer = keyword_analyzer.Name
+	keywordFieldMapping.Analyzer = keyword.Name
 
 	// a specific mapping to index the description fields
 	// detected language
 	descriptionLangFieldMapping := bleve.NewTextFieldMapping()
 	descriptionLangFieldMapping.Name = "descriptionLang"
-	descriptionLangFieldMapping.Analyzer = detect_lang.AnalyzerName
+	descriptionLangFieldMapping.Analyzer = detectlang.AnalyzerName
 	descriptionLangFieldMapping.Store = false
 	descriptionLangFieldMapping.IncludeTermVectors = false
 	descriptionLangFieldMapping.IncludeInAll = false
@@ -76,7 +76,7 @@ func buildIndexMapping() (mapping.IndexMapping, error) {
 
 	err := indexMapping.AddCustomTokenFilter("notTooLong",
 		map[string]interface{}{
-			"type":   truncate_token_filter.Name,
+			"type":   truncate.Name,
 			"length": 5.0,
 		})
 	if err != nil {
@@ -85,12 +85,12 @@ func buildIndexMapping() (mapping.IndexMapping, error) {
 
 	err = indexMapping.AddCustomAnalyzer("enNotTooLong",
 		map[string]interface{}{
-			"type":      custom_analyzer.Name,
+			"type":      custom.Name,
 			"tokenizer": unicode.Name,
 			"token_filters": []string{
 				"notTooLong",
 				en.PossessiveName,
-				lower_case_filter.Name,
+				lowercase.Name,
 				en.StopName,
 				porter.Name,
 			},

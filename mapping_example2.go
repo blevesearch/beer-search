@@ -13,14 +13,14 @@ package main
 
 import (
 	"github.com/blevesearch/bleve"
-	"github.com/blevesearch/bleve/analysis/analyzers/custom_analyzer"
-	"github.com/blevesearch/bleve/analysis/analyzers/keyword_analyzer"
-	"github.com/blevesearch/bleve/analysis/language/en"
-	"github.com/blevesearch/bleve/analysis/token_filters/edge_ngram_filter"
-	"github.com/blevesearch/bleve/analysis/token_filters/lower_case_filter"
+	"github.com/blevesearch/bleve/analysis/analyzers/custom"
+	"github.com/blevesearch/bleve/analysis/analyzers/keyword"
+	"github.com/blevesearch/bleve/analysis/lang/en"
 	"github.com/blevesearch/bleve/analysis/tokenizers/unicode"
+	"github.com/blevesearch/bleve/analysis/tokens/edgengram"
+	"github.com/blevesearch/bleve/analysis/tokens/lowercase"
 	"github.com/blevesearch/bleve/mapping"
-	"github.com/blevesearch/blevex/detect_lang"
+	"github.com/blevesearch/blevex/detectlang"
 )
 
 const textFieldAnalyzer = "en"
@@ -37,13 +37,13 @@ func buildIndexMapping() (mapping.IndexMapping, error) {
 
 	// a generic reusable mapping for keyword text
 	keywordFieldMapping := bleve.NewTextFieldMapping()
-	keywordFieldMapping.Analyzer = keyword_analyzer.Name
+	keywordFieldMapping.Analyzer = keyword.Name
 
 	// a specific mapping to index the description fields
 	// detected language
 	descriptionLangFieldMapping := bleve.NewTextFieldMapping()
 	descriptionLangFieldMapping.Name = "descriptionLang"
-	descriptionLangFieldMapping.Analyzer = detect_lang.AnalyzerName
+	descriptionLangFieldMapping.Analyzer = detectlang.AnalyzerName
 	descriptionLangFieldMapping.Store = false
 	descriptionLangFieldMapping.IncludeTermVectors = false
 	descriptionLangFieldMapping.IncludeInAll = false
@@ -75,7 +75,7 @@ func buildIndexMapping() (mapping.IndexMapping, error) {
 
 	err := indexMapping.AddCustomTokenFilter("edgeNgram325",
 		map[string]interface{}{
-			"type": edge_ngram_filter.Name,
+			"type": edgengram.Name,
 			"min":  3.0,
 			"max":  25.0,
 		})
@@ -85,11 +85,11 @@ func buildIndexMapping() (mapping.IndexMapping, error) {
 
 	err = indexMapping.AddCustomAnalyzer("enWithEdgeNgram325",
 		map[string]interface{}{
-			"type":      custom_analyzer.Name,
+			"type":      custom.Name,
 			"tokenizer": unicode.Name,
 			"token_filters": []string{
 				en.PossessiveName,
-				lower_case_filter.Name,
+				lowercase.Name,
 				en.StopName,
 				"edgeNgram325",
 			},

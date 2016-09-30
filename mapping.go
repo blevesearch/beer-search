@@ -14,8 +14,8 @@ package main
 
 import (
 	"github.com/blevesearch/bleve"
-	"github.com/blevesearch/bleve/analysis/analyzers/keyword_analyzer"
-	"github.com/blevesearch/bleve/analysis/language/en"
+	"github.com/blevesearch/bleve/analysis/analyzers/keyword"
+	"github.com/blevesearch/bleve/analysis/lang/en"
 	"github.com/blevesearch/bleve/mapping"
 )
 
@@ -27,7 +27,7 @@ func buildIndexMapping() (mapping.IndexMapping, error) {
 
 	// a generic reusable mapping for keyword text
 	keywordFieldMapping := bleve.NewTextFieldMapping()
-	keywordFieldMapping.Analyzer = keyword_analyzer.Name
+	keywordFieldMapping.Analyzer = keyword.Name
 
 	beerMapping := bleve.NewDocumentMapping()
 
