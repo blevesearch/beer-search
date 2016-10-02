@@ -13,12 +13,12 @@ package main
 
 import (
 	"github.com/blevesearch/bleve"
-	"github.com/blevesearch/bleve/analysis/analyzers/custom"
-	"github.com/blevesearch/bleve/analysis/analyzers/keyword"
+	"github.com/blevesearch/bleve/analysis/analyzer/custom"
+	"github.com/blevesearch/bleve/analysis/analyzer/keyword"
 	"github.com/blevesearch/bleve/analysis/lang/en"
-	"github.com/blevesearch/bleve/analysis/tokenizers/unicode"
-	"github.com/blevesearch/bleve/analysis/tokens/edgengram"
-	"github.com/blevesearch/bleve/analysis/tokens/lowercase"
+	"github.com/blevesearch/bleve/analysis/token/edgengram"
+	"github.com/blevesearch/bleve/analysis/token/lowercase"
+	"github.com/blevesearch/bleve/analysis/tokenizer/unicode"
 	"github.com/blevesearch/bleve/mapping"
 	"github.com/blevesearch/blevex/detectlang"
 )
