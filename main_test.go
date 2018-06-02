@@ -170,7 +170,7 @@ func TestBeerSearchAll(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	expectedResultCount = uint64(2)
+	expectedResultCount = uint64(3)
 	if dateSearchResult.Total != expectedResultCount {
 		t.Errorf("expected %d hits, got %d", expectedResultCount, dateSearchResult.Total)
 	} else {
