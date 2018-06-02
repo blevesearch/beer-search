@@ -174,7 +174,7 @@ func TestBeerSearchAll(t *testing.T) {
 	if dateSearchResult.Total != expectedResultCount {
 		t.Errorf("expected %d hits, got %d", expectedResultCount, dateSearchResult.Total)
 	} else {
-		expectedResultId := "brasserie_du_bouffay"
+		expectedResultId := "augustiner_brau_munchen"
 		if dateSearchResult.Hits[0].ID != expectedResultId {
 			t.Errorf("expected top hit ID: %s, got %s", expectedResultId, dateSearchResult.Hits[0].ID)
 		}
