@@ -22,8 +22,8 @@ import (
 	"runtime/pprof"
 	"time"
 
-	"github.com/blevesearch/bleve"
-	bleveHttp "github.com/blevesearch/bleve/http"
+	"github.com/blevesearch/bleve/v2"
+	bleveHttp "github.com/blevesearch/bleve/v2/http"
 )
 
 var batchSize = flag.Int("batchSize", 100, "batch size for indexing")

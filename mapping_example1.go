@@ -12,16 +12,15 @@
 package main
 
 import (
-	"github.com/blevesearch/bleve"
-	"github.com/blevesearch/bleve/analysis/analyzer/custom"
-	"github.com/blevesearch/bleve/analysis/analyzer/keyword"
-	"github.com/blevesearch/bleve/analysis/lang/en"
-	"github.com/blevesearch/bleve/analysis/token/lowercase"
-	"github.com/blevesearch/bleve/analysis/token/porter"
-	"github.com/blevesearch/bleve/analysis/token/truncate"
-	"github.com/blevesearch/bleve/analysis/tokenizer/unicode"
-	"github.com/blevesearch/bleve/mapping"
-	"github.com/blevesearch/blevex/detectlang"
+	"github.com/blevesearch/bleve/v2"
+	"github.com/blevesearch/bleve/v2/analysis/analyzer/custom"
+	"github.com/blevesearch/bleve/v2/analysis/analyzer/keyword"
+	"github.com/blevesearch/bleve/v2/analysis/lang/en"
+	"github.com/blevesearch/bleve/v2/analysis/token/lowercase"
+	"github.com/blevesearch/bleve/v2/analysis/token/porter"
+	"github.com/blevesearch/bleve/v2/analysis/token/truncate"
+	"github.com/blevesearch/bleve/v2/analysis/tokenizer/unicode"
+	"github.com/blevesearch/bleve/v2/mapping"
 )
 
 const textFieldAnalyzer = "en"
@@ -39,15 +38,6 @@ func buildIndexMapping() (mapping.IndexMapping, error) {
 	// a generic reusable mapping for keyword text
 	keywordFieldMapping := bleve.NewTextFieldMapping()
 	keywordFieldMapping.Analyzer = keyword.Name
-
-	// a specific mapping to index the description fields
-	// detected language
-	descriptionLangFieldMapping := bleve.NewTextFieldMapping()
-	descriptionLangFieldMapping.Name = "descriptionLang"
-	descriptionLangFieldMapping.Analyzer = detectlang.AnalyzerName
-	descriptionLangFieldMapping.Store = false
-	descriptionLangFieldMapping.IncludeTermVectors = false
-	descriptionLangFieldMapping.IncludeInAll = false
 
 	beerMapping := bleve.NewDocumentMapping()
 
