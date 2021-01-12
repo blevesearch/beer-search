@@ -17,7 +17,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/blevesearch/bleve"
+	"github.com/blevesearch/bleve/v2"
 )
 
 func TestBeerSearchAll(t *testing.T) {
@@ -166,6 +166,7 @@ func TestBeerSearchAll(t *testing.T) {
 	dateRangeQuery := bleve.NewDateRangeQuery(queryStartDate, time.Time{})
 	dateRangeQuery.SetField("updated")
 	dateSearchRequest := bleve.NewSearchRequest(dateRangeQuery)
+	dateSearchRequest.SortBy([]string{"_id"})
 	dateSearchResult, err := index.Search(dateSearchRequest)
 	if err != nil {
 		t.Error(err)
