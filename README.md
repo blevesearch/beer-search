@@ -4,7 +4,7 @@ An example app using [bleve](http://github.com/blevesearch/bleve) to index beers
 
 ## Status
 
-[![Build Status](https://travis-ci.org/blevesearch/beer-search.svg?branch=master)](https://travis-ci.org/blevesearch/beer-search)
+[![Tests](https://github.com/blevesearch/beer-search/workflows/Tests/badge.svg?branch=master&event=push)](https://github.com/blevesearch/beer-search/actions?query=workflow%3ATests+event%3Apush+branch%3Amaster)
 
 ## Running
 
