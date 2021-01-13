@@ -259,19 +259,17 @@ function SearchCtrl($scope, $http, $routeParams, $log, $sce) {
                 explain: true,
                 size: parseInt($scope.size, 10)
         };
+        var terms = [];
         for(var i in $scope.phraseTerms) {
                 var term = $scope.phraseTerms[i];
                 if (term !== null) {
-                    var termQuery = {
-                        "term": term,
-                        "field": $scope.phraseField,
-                        "boost": 1.0,
-                    };
-                    requestBody.query.terms.push(termQuery);
-                } else {
-                    requestBody.query.terms.push(null);
+                    terms.push(term)
                 }
+        }
 
+        if (terms.length > 0) {
+            requestBody.query.terms.push(terms);
+            requestBody.query.field = $scope.phraseField;
         }
 
         $http.post('/api/search', requestBody).
