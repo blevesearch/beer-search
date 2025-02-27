@@ -13,7 +13,6 @@ import (
 	"encoding/json"
 	_ "expvar"
 	"flag"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -26,17 +25,18 @@ import (
 	bleveHttp "github.com/blevesearch/bleve/v2/http"
 )
 
-var batchSize = flag.Int("batchSize", 100, "batch size for indexing")
-var bindAddr = flag.String("addr", ":8094", "http listen address")
-var jsonDir = flag.String("jsonDir", "data/", "json directory")
-var indexPath = flag.String("index", "beer-search.bleve", "index path")
-var staticEtag = flag.String("staticEtag", "", "A static etag value.")
-var staticPath = flag.String("static", "static/", "Path to the static content")
-var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
-var memprofile = flag.String("memprofile", "", "write mem profile to file")
+var (
+	batchSize  = flag.Int("batchSize", 100, "batch size for indexing")
+	bindAddr   = flag.String("addr", ":8094", "http listen address")
+	jsonDir    = flag.String("jsonDir", "data/", "json directory")
+	indexPath  = flag.String("index", "beer-search.bleve", "index path")
+	staticEtag = flag.String("staticEtag", "", "A static etag value.")
+	staticPath = flag.String("static", "static/", "Path to the static content")
+	cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
+	memprofile = flag.String("memprofile", "", "write mem profile to file")
+)
 
 func main() {
-
 	flag.Parse()
 
 	log.Printf("GOMAXPROCS: %d", runtime.GOMAXPROCS(-1))
@@ -103,13 +103,11 @@ func main() {
 	http.Handle("/", router)
 	log.Printf("Listening on %v", *bindAddr)
 	log.Fatal(http.ListenAndServe(*bindAddr, nil))
-
 }
 
 func indexBeer(i bleve.Index) error {
-
 	// open the directory
-	dirEntries, err := ioutil.ReadDir(*jsonDir)
+	dirEntries, err := os.ReadDir(*jsonDir)
 	if err != nil {
 		return err
 	}
@@ -123,7 +121,7 @@ func indexBeer(i bleve.Index) error {
 	for _, dirEntry := range dirEntries {
 		filename := dirEntry.Name()
 		// read the bytes
-		jsonBytes, err := ioutil.ReadFile(*jsonDir + "/" + filename)
+		jsonBytes, err := os.ReadFile(*jsonDir + "/" + filename)
 		if err != nil {
 			return err
 		}
