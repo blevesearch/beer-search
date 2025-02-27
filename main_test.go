@@ -202,11 +202,6 @@ func TestBeerSearchAll(t *testing.T) {
 	}
 }
 
-type jsonFile struct {
-	filename string
-	contents []byte
-}
-
 // this test reproduces bug #87
 // https://github.com/blevesearch/bleve/issues/87
 // because of which, it will deadlock
