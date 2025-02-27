@@ -19,6 +19,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"runtime/pprof"
+	"strings"
 	"time"
 
 	"github.com/blevesearch/bleve/v2"
@@ -101,7 +102,17 @@ func main() {
 
 	// start the HTTP server
 	http.Handle("/", router)
-	log.Printf("Listening on %v", *bindAddr)
+
+	address := strings.Split(*bindAddr, ":")
+	host := address[0]
+	port := address[1]
+
+	if host == "" {
+		host = "localhost"
+	}
+
+	log.Printf("Listening on http://%v:%v", host, port)
+
 	log.Fatal(http.ListenAndServe(*bindAddr, nil))
 }
 
