@@ -10,13 +10,13 @@ An example app using [bleve](http://github.com/blevesearch/bleve) to index beers
 
 Recommended:
 
-```
+```bash
 go build
 ./beer-search
 ```
 
 Alternative:
 
-```
+```bash
 go run main.go http_util.go mapping.go
 ```
