@@ -56,7 +56,10 @@ func TestBeerSearchAll(t *testing.T) {
 		}
 		ext := filepath.Ext(filename)
 		docId := filename[:(len(filename) - len(ext))]
-		batch.Index(docId, jsonDoc)
+		if err := batch.Index(docId, jsonDoc); err != nil {
+			t.Fatal(err)
+		}
+
 		batchCount++
 
 		if batchCount >= indexBatchSize {
@@ -236,7 +239,9 @@ func TestBeerSearchBug87(t *testing.T) {
 			}
 			ext := filepath.Ext(filename)
 			docId := filename[:(len(filename) - len(ext))]
-			index.Index(docId, jsonBytes)
+			if err := index.Index(docId, jsonBytes); err != nil {
+				t.Error(err)
+			}
 		}
 	}()
 

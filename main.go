@@ -47,7 +47,10 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		pprof.StartCPUProfile(f)
+
+		if err := pprof.StartCPUProfile(f); err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	// open the index
@@ -76,7 +79,11 @@ func main() {
 				if err != nil {
 					log.Fatal(err)
 				}
-				pprof.WriteHeapProfile(f)
+
+				if err := pprof.WriteHeapProfile(f); err != nil {
+					log.Fatal(err)
+				}
+
 				f.Close()
 			}
 		}()
@@ -144,7 +151,10 @@ func indexBeer(i bleve.Index) error {
 		}
 		ext := filepath.Ext(filename)
 		docID := filename[:(len(filename) - len(ext))]
-		batch.Index(docID, jsonDoc)
+		if err := batch.Index(docID, jsonDoc); err != nil {
+			return err
+		}
+
 		batchCount++
 
 		if batchCount >= *batchSize {
