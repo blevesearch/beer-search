@@ -11,7 +11,6 @@ package main
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -34,7 +33,7 @@ func TestBeerSearchAll(t *testing.T) {
 	defer index.Close()
 
 	// open the directory
-	dirEntries, err := ioutil.ReadDir("data/")
+	dirEntries, err := os.ReadDir("data/")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -45,7 +44,7 @@ func TestBeerSearchAll(t *testing.T) {
 	for _, dirEntry := range dirEntries {
 		filename := dirEntry.Name()
 		// read the bytes
-		jsonBytes, err := ioutil.ReadFile("data/" + filename)
+		jsonBytes, err := os.ReadFile("data/" + filename)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -224,16 +223,16 @@ func TestBeerSearchBug87(t *testing.T) {
 	// start indexing documents in the background
 	go func() {
 		// open the directory
-		dirEntries, err := ioutil.ReadDir("data/")
+		dirEntries, err := os.ReadDir("data/")
 		if err != nil {
-			t.Fatal(err)
+			t.Error(err)
 		}
 
 		for _, dirEntry := range dirEntries {
 			filename := dirEntry.Name()
-			jsonBytes, err := ioutil.ReadFile("data/" + filename)
+			jsonBytes, err := os.ReadFile("data/" + filename)
 			if err != nil {
-				t.Fatal(err)
+				t.Error(err)
 			}
 			ext := filepath.Ext(filename)
 			docId := filename[:(len(filename) - len(ext))]
