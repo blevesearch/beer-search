@@ -13,6 +13,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"sync"
 	"testing"
 	"time"
 
@@ -20,13 +21,20 @@ import (
 )
 
 func TestBeerSearchAll(t *testing.T) {
-	defer os.RemoveAll("beer-search-test.bleve")
+	tempDir, err := os.MkdirTemp("", "bleve_test")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	indexName := filepath.Join(tempDir, "beer-search-test.bleve")
 
 	mapping, err := buildIndexMapping()
 	if err != nil {
 		t.Fatal(err)
 	}
-	index, err := bleve.New("beer-search-test.bleve", mapping)
+
+	index, err := bleve.New(indexName, mapping)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -48,12 +56,14 @@ func TestBeerSearchAll(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		// parse bytes as json
 		var jsonDoc interface{}
 		err = json.Unmarshal(jsonBytes, &jsonDoc)
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		ext := filepath.Ext(filename)
 		docId := filename[:(len(filename) - len(ext))]
 		if err := batch.Index(docId, jsonDoc); err != nil {
@@ -84,6 +94,7 @@ func TestBeerSearchAll(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+
 	if actualCount != expectedCount {
 		t.Errorf("expected %d documents, got %d", expectedCount, actualCount)
 	}
@@ -96,6 +107,7 @@ func TestBeerSearchAll(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+
 	expectedResultCount := uint64(1)
 	if termSearchResult.Total != expectedResultCount {
 		t.Errorf("expected %d hits, got %d", expectedResultCount, termSearchResult.Total)
@@ -113,6 +125,7 @@ func TestBeerSearchAll(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+
 	expectedResultCount = uint64(1)
 	if matchPhraseSearchResult.Total != expectedResultCount {
 		t.Errorf("expected %d hits, got %d", expectedResultCount, matchPhraseSearchResult.Total)
@@ -130,6 +143,7 @@ func TestBeerSearchAll(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+
 	expectedResultCount = uint64(1)
 	if syntaxSearchResult.Total != expectedResultCount {
 		t.Errorf("expected %d hits, got %d", expectedResultCount, syntaxSearchResult.Total)
@@ -149,6 +163,7 @@ func TestBeerSearchAll(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+
 	expectedResultCount = uint64(1)
 	if numericSearchResult.Total != expectedResultCount {
 		t.Errorf("expected %d hits, got %d", expectedResultCount, numericSearchResult.Total)
@@ -165,6 +180,7 @@ func TestBeerSearchAll(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	dateRangeQuery := bleve.NewDateRangeQuery(queryStartDate, time.Time{})
 	dateRangeQuery.SetField("updated")
 	dateSearchRequest := bleve.NewSearchRequest(dateRangeQuery)
@@ -173,6 +189,7 @@ func TestBeerSearchAll(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+
 	expectedResultCount = uint64(2)
 	if dateSearchResult.Total != expectedResultCount {
 		t.Errorf("expected %d hits, got %d", expectedResultCount, dateSearchResult.Total)
@@ -191,6 +208,7 @@ func TestBeerSearchAll(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+
 	expectedResultCount = uint64(1)
 	if prefixSearchResult.Total != expectedResultCount {
 		t.Errorf("expected %d hits, got %d", expectedResultCount, prefixSearchResult.Total)
@@ -206,20 +224,31 @@ func TestBeerSearchAll(t *testing.T) {
 // https://github.com/blevesearch/bleve/issues/87
 // because of which, it will deadlock
 func TestBeerSearchBug87(t *testing.T) {
-	defer os.RemoveAll("beer-search-test.bleve")
+	tempDir, err := os.MkdirTemp("", "bleve_test")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	indexName := filepath.Join(tempDir, "beer-search-test.bleve")
 
 	mapping, err := buildIndexMapping()
 	if err != nil {
 		t.Fatal(err)
 	}
-	index, err := bleve.New("beer-search-test.bleve", mapping)
+
+	index, err := bleve.New(indexName, mapping)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer index.Close()
 
 	// start indexing documents in the background
+	var wg sync.WaitGroup
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
+
 		// open the directory
 		dirEntries, err := os.ReadDir("data/")
 		if err != nil {
@@ -232,6 +261,7 @@ func TestBeerSearchBug87(t *testing.T) {
 			if err != nil {
 				t.Error(err)
 			}
+
 			ext := filepath.Ext(filename)
 			docId := filename[:(len(filename) - len(ext))]
 			if err := index.Index(docId, jsonBytes); err != nil {
@@ -251,9 +281,12 @@ func TestBeerSearchBug87(t *testing.T) {
 		termSearchRequest := bleve.NewSearchRequest(termQuery)
 		// termSearchRequest.AddFacet("styles", bleve.NewFacetRequest("style", 3))
 		termSearchRequest.Fields = []string{"abv"}
+
 		_, err := index.Search(termSearchRequest)
 		if err != nil {
 			t.Error(err)
 		}
 	}
+
+	wg.Wait()
 }
