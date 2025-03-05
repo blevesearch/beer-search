@@ -7,11 +7,13 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
+//go:build example2
 // +build example2
 
 package main
 
 import (
+	"github.com/blevesearch/bleve/v2"
 	"github.com/blevesearch/bleve/v2/analysis/analyzer/custom"
 	"github.com/blevesearch/bleve/v2/analysis/analyzer/keyword"
 	"github.com/blevesearch/bleve/v2/analysis/lang/en"
@@ -24,7 +26,6 @@ import (
 const textFieldAnalyzer = "en"
 
 func buildIndexMapping() (mapping.IndexMapping, error) {
-
 	// a custom field definition that uses our custom analyzer
 	edgeNgram325FieldMapping := bleve.NewTextFieldMapping()
 	edgeNgram325FieldMapping.Analyzer = "enWithEdgeNgram325"

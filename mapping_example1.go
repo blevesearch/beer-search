@@ -7,6 +7,7 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
+//go:build example1
 // +build example1
 
 package main
@@ -26,7 +27,6 @@ import (
 const textFieldAnalyzer = "en"
 
 func buildIndexMapping() (mapping.IndexMapping, error) {
-
 	// a custom field definition that uses our custom analyzer
 	notTooLongFieldMapping := bleve.NewTextFieldMapping()
 	notTooLongFieldMapping.Analyzer = "enNotTooLong"

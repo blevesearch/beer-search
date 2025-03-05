@@ -7,8 +7,8 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
-// +build !example1
-// +build !example2
+//go:build !example1 && !example2
+// +build !example1,!example2
 
 package main
 
@@ -20,7 +20,6 @@ import (
 )
 
 func buildIndexMapping() (mapping.IndexMapping, error) {
-
 	// a generic reusable mapping for english text
 	englishTextFieldMapping := bleve.NewTextFieldMapping()
 	englishTextFieldMapping.Analyzer = en.AnalyzerName
